@@ -87,8 +87,12 @@ perClient ::
   IOLoop v x -- client accepted (post)
   -> (String -> IOLoop v a) -- read line from client
   -> IOLoop v ()
-perClient =
-  error "todo"
+perClient x f =
+  do
+    _ <- x
+    l <- pGetLine
+    _ <- f l
+    perClient x f
 
 loop ::
   IO w -- server initialise
@@ -119,6 +123,11 @@ pPutStrLn ::
   -> IOLoop v ()
 pPutStrLn s =
   Loop (`lPutStrLn` s)
+
+pGetLine ::
+  IOLoop v String
+pGetLine =
+  Loop lGetLine
 
 (!) ::
   Foldable t =>

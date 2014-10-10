@@ -16,20 +16,20 @@ newtype Compose f g a =
 -- Implement a Functor instance for Compose
 instance (Functor f, Functor g) =>
     Functor (Compose f g) where
-  (<$>) =
-    error "todo: Course.Compose (<$>)#instance (Compose f g)"
+  f <$> (Compose xss) =
+    Compose $ (f <$>) <$> xss
 
 instance (Applicative f, Applicative g) =>
   Applicative (Compose f g) where
 -- Implement the pure function for an Applicative instance for Compose
   pure =
-    error "todo: Course.Compose pure#instance (Compose f g)"
+    Compose . pure . pure
 -- Implement the (<*>) function for an Applicative instance for Compose
-  (<*>) =
-    error "todo: Course.Compose (<*>)#instance (Compose f g)"
+  (Compose fss) <*> (Compose xss) =
+    Compose $ (<*>) <$> fss <*> xss
 
 instance (Monad f, Monad g) =>
   Monad (Compose f g) where
 -- Implement the (=<<) function for a Monad instance for Compose
-  (=<<) =
-    error "todo: Course.Compose (<<=)#instance (Compose f g)"
+  _f =<< (Compose _xss) =
+    error "Not possible to implement Course.Compose (<<=)#instance (Compose f g)"

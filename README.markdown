@@ -6,17 +6,10 @@
 
 ### With contributions from individuals (thanks!)
 
-#### Special note 1
+#### Special note
 
-If you have arrived here by https://github.com/data61/fp-course and you are
-looking for the *answers* (not the exercises), please go to https://github.com/tonymorris/fp-course
-
-#### Special note 2
-
-As of February 2017, this repository is taking the place of the repository hosted at
-https://github.com/NICTA/course which is deprecated.
-
-Data61 replaces what was NICTA since July 2016. The new repository is located at
+If you have arrived here by https://github.com/peteryland/fp-course
+and you are looking for the *exercises* (not the answers), please go to
 https://github.com/data61/fp-course.
 
 #### Introduction

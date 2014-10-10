@@ -8,7 +8,7 @@ import Data.Eq(Eq)
 import Data.Foldable(foldr)
 import Data.Functor(Functor(fmap))
 import Data.Int(Int)
-import Data.String(IsString(fromString))
+-- import Data.String(IsString(fromString))
 import Prelude(Show)
 import System.IO(IO)
 
