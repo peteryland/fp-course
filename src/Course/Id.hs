@@ -34,4 +34,3 @@ instance P.Monad Id where
     flip bindId
   return =
     Id
-
