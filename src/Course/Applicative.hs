@@ -2,6 +2,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE RebindableSyntax #-}
+{-# OPTIONS_GHC -fno-warn-unused-binds #-}
 
 module Course.Applicative where
 
@@ -49,13 +50,13 @@ instance Applicative ExactlyOne where
     a
     -> ExactlyOne a
   pure =
-    error "todo: Course.Applicative pure#instance ExactlyOne"
+    ExactlyOne
   (<*>) ::
     ExactlyOne (a -> b)
     -> ExactlyOne a
     -> ExactlyOne b
-  (<*>) =
-    error "todo: Course.Applicative (<*>)#instance ExactlyOne"
+  (ExactlyOne f) <*> (ExactlyOne x) =
+    ExactlyOne $ f x
 
 -- | Insert into a List.
 --
@@ -68,13 +69,13 @@ instance Applicative List where
     a
     -> List a
   pure =
-    error "todo: Course.Applicative pure#instance List"
+    (:. Nil)
   (<*>) ::
     List (a -> b)
     -> List a
     -> List b
-  (<*>) =
-    error "todo: Course.Apply (<*>)#instance List"
+  fs <*> xs =
+    foldRight (\f ys -> map f xs ++ ys) Nil fs
 
 -- | Insert into an Optional.
 --
@@ -93,13 +94,13 @@ instance Applicative Optional where
     a
     -> Optional a
   pure =
-    error "todo: Course.Applicative pure#instance Optional"
+    Full
   (<*>) ::
     Optional (a -> b)
     -> Optional a
     -> Optional b
   (<*>) =
-    error "todo: Course.Apply (<*>)#instance Optional"
+    applyOptional
 
 -- | Insert into a constant function.
 --
@@ -123,15 +124,14 @@ instance Applicative ((->) t) where
   pure ::
     a
     -> ((->) t a)
-  pure =
-    error "todo: Course.Applicative pure#((->) t)"
+  pure x =
+    \_ -> x
   (<*>) ::
     ((->) t (a -> b))
     -> ((->) t a)
     -> ((->) t b)
-  (<*>) =
-    error "todo: Course.Apply (<*>)#instance ((->) t)"
-
+  (<*>) f g x =
+    (f x) (g x)
 
 -- | Apply a binary function in the environment.
 --
@@ -158,8 +158,8 @@ lift2 ::
   -> k a
   -> k b
   -> k c
-lift2 =
-  error "todo: Course.Applicative#lift2"
+lift2 f x y =
+  f <$> x <*> y
 
 -- | Apply a ternary function in the environment.
 -- /can be written using `lift2` and `(<*>)`./
@@ -191,8 +191,8 @@ lift3 ::
   -> k b
   -> k c
   -> k d
-lift3 =
-  error "todo: Course.Applicative#lift3"
+lift3 f x y z =
+  f <$> x <*> y <*> z
 
 -- | Apply a quaternary function in the environment.
 -- /can be written using `lift3` and `(<*>)`./
@@ -225,8 +225,8 @@ lift4 ::
   -> k c
   -> k d
   -> k e
-lift4 =
-  error "todo: Course.Applicative#lift4"
+lift4 f w x y z =
+  f <$> w <*> x <*> y <*> z
 
 -- | Apply a nullary function in the environment.
 lift0 ::
@@ -234,7 +234,7 @@ lift0 ::
   a
   -> k a
 lift0 =
-  error "todo: Course.Applicative#lift0"
+  pure
 
 -- | Apply a unary function in the environment.
 -- /can be written using `lift0` and `(<*>)`./
@@ -252,8 +252,8 @@ lift1 ::
   (a -> b)
   -> k a
   -> k b
-lift1 =
-  error "todo: Course.Applicative#lift1"
+lift1 f x =
+  lift0 f <*> x
 
 -- | Apply, discarding the value of the first argument.
 -- Pronounced, right apply.
@@ -278,8 +278,8 @@ lift1 =
   k a
   -> k b
   -> k b
-(*>) =
-  error "todo: Course.Applicative#(*>)"
+(*>) x y =
+  (\_ -> id) <$> x <*> y
 
 -- | Apply, discarding the value of the second argument.
 -- Pronounced, left apply.
@@ -304,8 +304,8 @@ lift1 =
   k b
   -> k a
   -> k b
-(<*) =
-  error "todo: Course.Applicative#(<*)"
+(<*) x y =
+  (\t -> (\_ -> t)) <$> x <*> y
 
 -- | Sequences a list of structures to a structure of list.
 --
@@ -328,7 +328,7 @@ sequence ::
   List (k a)
   -> k (List a)
 sequence =
-  error "todo: Course.Applicative#sequence"
+  foldRight (\x ys -> (:.) <$> x <*> ys) (pure Nil)
 
 -- | Replicate an effect a given number of times.
 --
@@ -353,8 +353,11 @@ replicateA ::
   Int
   -> k a
   -> k (List a)
-replicateA =
-  error "todo: Course.Applicative#replicateA"
+replicateA n =
+  sequence . replicate' n
+    where
+      replicate' 0 x = x :. Nil
+      replicate' i x = x :. (replicate (i-1) x)
 
 -- | Filter a list with a predicate that produces an effect.
 --
@@ -381,8 +384,16 @@ filtering ::
   (a -> k Bool)
   -> List a
   -> k (List a)
-filtering =
-  error "todo: Course.Applicative#filtering"
+filtering f =
+  foldRight (\x ys -> (++) <$> ((\b -> if b then (x :. Nil) else Nil) <$> (f x)) <*> ys) (pure Nil)
+
+-- filtering _ Nil =
+--   pure Nil
+-- filtering f (x :. xs) =
+--   (++) <$> dotest f x <*> filtering f xs
+--     where
+--       dotest :: Applicative f => (a -> f Bool) -> a -> f (List a)
+--       dotest g y = (\b -> if b then (y :. Nil) else Nil) <$> (g y)
 
 -----------------------
 -- SUPPORT LIBRARIES --

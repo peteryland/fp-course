@@ -59,7 +59,7 @@ import Prelude(
   , Bool(..)
   , Either(..)
   , Ordering(..)
-  , Char
+--  , Char
   , Int
   , Integer
   , IO

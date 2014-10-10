@@ -6,10 +6,11 @@
 
 ### With contributions from individuals and organisations (thanks!)
 
-#### Special note 1
+#### Special note
 
-If you have arrived here by https://github.com/system-f/fp-course and you are
-looking for the *answers* (not the exercises), please go to https://github.com/tonymorris/fp-course
+If you have arrived here by https://dev.piglet.ch/pdr/fp-course or https://github.com/peteryland/fp-course
+and you are looking for the *exercises* (not the answers), please go to https://github.com/system-f/fp-course.
+Tony's answers can also be found at https://github.com/tonymorris/fp-course.
 
 #### Special note 2
 
