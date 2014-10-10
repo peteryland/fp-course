@@ -16,6 +16,10 @@ mapOptional :: (a -> b) -> Optional a -> Optional b
 mapOptional _ Empty    = Empty
 mapOptional f (Full a) = Full (f a)
 
+div' :: Int -> Int -> Optional Int
+div' _ 0 = Empty
+div' x y = Full $ div x y
+
 bindOptional :: (a -> Optional b) -> Optional a -> Optional b
 bindOptional _ Empty    = Empty
 bindOptional f (Full a) = f a
@@ -29,7 +33,7 @@ Empty <+> o = o
 k <+> _     = k
 
 applyOptional :: Optional (a -> b) -> Optional a -> Optional b
-applyOptional f a = bindOptional (\f' -> mapOptional (\a' -> f' a') a) f
+applyOptional f a = bindOptional (\f' -> mapOptional f' a) f
 
 twiceOptional :: (a -> b -> c) -> Optional a -> Optional b -> Optional c
 twiceOptional f = applyOptional . mapOptional f

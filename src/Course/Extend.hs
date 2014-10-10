@@ -28,8 +28,8 @@ instance Extend Id where
     (Id a -> b)
     -> Id a
     -> Id b
-  (<<=) =
-    error "todo"
+  f <<= x =
+    Id $ f x
 
 -- | Implement the @Extend@ instance for @List@.
 --
@@ -46,8 +46,10 @@ instance Extend List where
     (List a -> b)
     -> List a
     -> List b
-  (<<=) =
-    error "todo"
+  f <<= l =
+    case l of
+      Nil -> Nil
+      (x:.xs) -> (f (x :. xs)) :. (f <<= xs)
 
 -- | Implement the @Extend@ instance for @Optional@.
 --
@@ -61,8 +63,10 @@ instance Extend Optional where
     (Optional a -> b)
     -> Optional a
     -> Optional b
-  (<<=) =
-    error "todo"
+  f <<= x =
+    case x of
+      Empty -> Empty
+      _ -> Full $ f x
 
 -- | Duplicate the functor using extension.
 --
@@ -81,5 +85,5 @@ cojoin ::
   Extend f =>
   f a
   -> f (f a)
-cojoin =
-  error "todo"
+cojoin x =
+  id <<= x

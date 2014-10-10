@@ -1,6 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE InstanceSigs #-}
+{-# OPTIONS_GHC -fno-warn-unused-binds #-}
 
 module Course.Comonad
 (
@@ -25,7 +26,7 @@ instance Comonad Id where
     Id a
     -> a
   copure =
-    error "todo"
+    runId
 
 -- | Witness that all things with (<<=) and copure also have (<$>).
 --
@@ -36,5 +37,5 @@ instance Comonad Id where
   (a -> b)
   -> f a
   -> f b
-(<$>) =
-  error "todo"
+f <$> x =
+  f . copure <<= x

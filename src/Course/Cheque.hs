@@ -22,7 +22,7 @@ module Course.Cheque where
 import Course.Core
 import Course.Optional
 import Course.List
-import Course.Functor
+-- import Course.Functor
 import Course.Apply
 import Course.Bind
 
@@ -213,12 +213,71 @@ showDigit Eight =
 showDigit Nine =
   "nine"
 
+showDigitTens ::
+  Digit
+  -> Chars
+showDigitTens Zero =
+  ""
+showDigitTens One =
+  "ten"
+showDigitTens Two =
+  "twenty"
+showDigitTens Three =
+  "thirty"
+showDigitTens Four =
+  "forty"
+showDigitTens Five =
+  "fifty"
+showDigitTens Six =
+  "sixty"
+showDigitTens Seven =
+  "seventy"
+showDigitTens Eight =
+  "eighty"
+showDigitTens Nine =
+  "ninety"
+
 -- A data type representing one, two or three digits, which may be useful for grouping.
 data Digit3 =
   D1 Digit
   | D2 Digit Digit
   | D3 Digit Digit Digit
   deriving Eq
+
+showD ::
+  Digit3
+  -> Chars
+showD (D1 d) =
+  showDigit d
+showD (D2 d1 d2) =
+  case d1 of
+    Zero ->
+      showDigit d2
+    One ->
+      case d2 of
+        Zero -> "ten"
+        One -> "eleven"
+        Two -> "twelve"
+        Three -> "thirteen"
+        Four -> "fourteen"
+        Five -> "fifteen"
+        Six -> "sixteen"
+        Seven -> "seventeen"
+        Eight -> "eighteen"
+        Nine -> "nineteen"
+    _ ->
+      case d2 of
+        Zero -> showDigitTens d1
+        _ -> showDigitTens d1 ++ '-' :. showDigit d2
+showD (D3 Zero d2 d3) =
+  showD (D2 d2 d3)
+showD (D3 d1 Zero Zero) =
+  showDigit d1 ++ " hundred"
+showD (D3 d1 d2 d3) =
+  showDigit d1 ++ " hundred and " ++ showD (D2 d2 d3)
+
+instance Show Digit3 where
+  show = hlist . showD
 
 -- Possibly convert a character to a digit.
 fromChar ::
@@ -323,5 +382,58 @@ fromChar _ =
 dollars ::
   Chars
   -> Chars
-dollars =
-  error "todo"
+dollars s =
+  showDollars ++ " and " ++ showCents
+  where
+    showCents = case showD centDigits of
+      "one" -> "one cent"
+      c -> c ++ " cents"
+    showDollars = case fst $ showGrouped dollarDigits of
+      "one" -> "one dollar"
+      d' -> d' ++ " dollars"
+    showGrouped Nil = ("zero", Nil)
+    showGrouped (x:.Nil) = (showD x, tail illion)
+    showGrouped (x:.xs) = case showGrouped xs of
+      (s', (ill:.illion')) -> case showD x of
+        "zero" -> (s', illion')
+        x' -> (x' ++ " " ++ ill ++ " " ++ s', illion')
+      (s', _) -> (showD x ++ " " ++ s', Nil)
+    dollarDigits = intoDigitGroups dollarAmount
+    dollarAmount = fst amount
+    centDigits =
+      case intoDigits centAmount of
+        Nil -> D1 Zero
+        (x:.Nil) -> D2 x Zero
+        (x1:.x2:._) -> D2 x1 x2
+    centAmount = snd amount
+    amount = split '.' $ filter (\x -> x == '.' || isDigit x) s
+    split y (x:.xs) =
+      if (y == x)
+        then
+          (Nil, x:.xs)
+        else
+          case split y xs of
+            (z1, z2) -> (x:.z1, z2)
+    split _ _ =
+      (Nil, Nil)
+    tail (_:.xs) = xs
+    tail _ = Nil
+    intoDigitGroups xs =
+      case intoDigits xs of
+        xs' -> make3groups xs'
+    make3groups xs =
+      case length xs `rem` 3 of
+        1 -> case xs of
+          (x1:.xs') -> D1 x1 :. make3groups' xs'
+          _ -> Nil
+        2 -> case xs of
+          (x1:.x2:.xs') -> D2 x1 x2 :. make3groups' xs'
+          _ -> Nil
+        _ -> make3groups' xs
+    make3groups' (x1:.x2:.x3:.xs) = D3 x1 x2 x3 :. make3groups' xs
+    make3groups' _ = Nil
+    intoDigits (x:.xs) =
+      case fromChar x of
+        Empty -> intoDigits xs
+        Full x' -> x' :. intoDigits xs
+    intoDigits _ = Nil

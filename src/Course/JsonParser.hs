@@ -10,7 +10,7 @@ import Course.Parser
 import Course.MoreParser
 import Course.JsonValue
 import Course.Functor
-import Course.Apply
+-- import Course.Apply
 import Course.Applicative
 import Course.Bind
 import Course.List
@@ -111,7 +111,24 @@ toSpecialCharacter c =
 jsonString ::
   Parser Chars
 jsonString =
-  error "todo"
+  between (is '"') (is '"') (list character')
+    where
+      character' =
+        character >>= \c ->
+        case c of
+          '\\' ->
+            character >>= \c' ->
+            case c' of
+              'u' ->
+                hex
+              _ ->
+                case toSpecialCharacter c' of
+                  Empty -> failed
+                  Full x -> pure $ fromSpecialCharacter x
+          '"' ->
+            failed
+          _ ->
+            pure c
 
 -- | Parse a JSON rational.
 --
@@ -140,7 +157,10 @@ jsonString =
 jsonNumber ::
   Parser Rational
 jsonNumber =
-  error "todo"
+  P (\i -> case readFloats(i) of
+      Empty -> ErrorResult Failed
+      Full (x, rest) -> Result rest x
+    )
 
 -- | Parse a JSON true literal.
 --
@@ -154,7 +174,7 @@ jsonNumber =
 jsonTrue ::
   Parser Chars
 jsonTrue =
-  error "todo"
+  stringTok "true"
 
 -- | Parse a JSON false literal.
 --
@@ -168,7 +188,7 @@ jsonTrue =
 jsonFalse ::
   Parser Chars
 jsonFalse =
-  error "todo"
+  stringTok "false"
 
 -- | Parse a JSON null literal.
 --
@@ -182,7 +202,7 @@ jsonFalse =
 jsonNull ::
   Parser Chars
 jsonNull =
-  error "todo"
+  stringTok "null"
 
 -- | Parse a JSON array.
 --
@@ -205,7 +225,7 @@ jsonNull =
 jsonArray ::
   Parser (List JsonValue)
 jsonArray =
-  error "todo"
+  betweenSepbyComma '[' ']' jsonValue
 
 -- | Parse a JSON object.
 --
@@ -225,7 +245,13 @@ jsonArray =
 jsonObject ::
   Parser Assoc
 jsonObject =
-  error "todo"
+  betweenSepbyComma '{' '}' kVPair
+    where
+      kVPair =
+        tok jsonString >>= \k ->
+        charTok ':' >>>
+        jsonValue >>= \v ->
+        pure (k, v)
 
 -- | Parse a JSON value.
 --
@@ -242,7 +268,13 @@ jsonObject =
 jsonValue ::
   Parser JsonValue
 jsonValue =
-   error "todo"
+  (const JsonNull <$> jsonNull) |||
+  (const JsonTrue <$> jsonTrue) |||
+  (const JsonFalse <$> jsonFalse) |||
+  (JsonArray <$> jsonArray) |||
+  (JsonString <$> jsonString) |||
+  (JsonObject <$> jsonObject) |||
+  (JsonRational False <$> jsonNumber)
 
 -- | Read a file into a JSON value.
 --
@@ -250,5 +282,6 @@ jsonValue =
 readJsonValue ::
   Filename
   -> IO (ParseResult JsonValue)
-readJsonValue =
-  error "todo"
+readJsonValue fn =
+  readFile fn >>= \cs ->
+  pure $ parse jsonValue cs

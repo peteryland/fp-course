@@ -14,8 +14,13 @@ fastAnagrams ::
   Chars
   -> Filename
   -> IO (List Chars)
-fastAnagrams =
-  error "todo"
+fastAnagrams s fn =
+  (\dict -> ncString <$> (listh . S.elems $ S.intersection (wordset dict) (candidates s))) <$> (readFile fn)
+  where
+    wordset dict' = S.fromDistinctAscList . hlist $ NoCaseString <$> lines dict'
+    candidates s' = S.fromList . hlist $ NoCaseString <$> (flatten $ inits <$> permutations s')
+    inits (x:.xs) = (x:.Nil) :. ((x :.) <$> (inits xs))
+    inits _ = Nil
 
 newtype NoCaseString =
   NoCaseString {
@@ -24,6 +29,9 @@ newtype NoCaseString =
 
 instance Eq NoCaseString where
   (==) = (==) `on` map toLower . ncString
+
+instance Ord NoCaseString where
+  compare = compare `on` map toLower . ncString
 
 instance Show NoCaseString where
   show = show . ncString
